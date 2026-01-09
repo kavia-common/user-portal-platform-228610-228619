@@ -12,22 +12,30 @@ To connect locally (canonical command):
 
 Both services may still connect to the same MySQL DB for other data (business tables).
 
-## Required table: `users`
-Fields:
-- `id` (auto-increment primary key)
-- `email` (unique)
-- `password_hash`
-- `created_at`
-- `updated_at`
+## Required table: `users` (final)
+Fields (required):
+- `id` (PK, auto-increment)
+- `email` (VARCHAR(255) UNIQUE NOT NULL)
+- `password_hash` (VARCHAR(255) NOT NULL)
+- `created_at` (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
 
-The table is created using one SQL statement (already applied in this environment):
-- `CREATE TABLE IF NOT EXISTS users (...)`
+### One-statement-at-a-time CLI (canonical: uses `db_connection.txt`)
+Run from the `user_database/` directory:
 
-Indexes/constraints expected:
-- `PRIMARY KEY (id)`
-- `UNIQUE KEY uq_users_email (email)`
-- `KEY idx_users_created_at (created_at)`
-- `KEY idx_users_updated_at (updated_at)`
+1) Create table (single statement):
+- `$(cat db_connection.txt) -e "CREATE TABLE IF NOT EXISTS users (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, email VARCHAR(255) NOT NULL, password_hash VARCHAR(255) NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id));"`
+
+2) Add unique index if missing (single statement):
+- `$(cat db_connection.txt) -e "ALTER TABLE users ADD UNIQUE KEY uq_users_email (email);"`
+
+Note: If the unique key already exists, step (2) will fail with an "already exists" error; that is expected.
+
+### Minimal helper SQL (via CLI only; no .sql files)
+- Fetch a user row for login verification:
+  - `$(cat db_connection.txt) -e "SELECT id, email, password_hash FROM users WHERE email='test@example.com' LIMIT 1;"`
+
+- Insert a new user (provide a bcrypt hash from Node):
+  - `$(cat db_connection.txt) -e "INSERT INTO users (email, password_hash) VALUES ('test@example.com', '<PASTE_BCRYPT_HASH_HERE>');"`
 
 ## Minimal seed / test user creation (one-statement-at-a-time)
 If you need a test user, create a bcrypt hash in Node and insert it.

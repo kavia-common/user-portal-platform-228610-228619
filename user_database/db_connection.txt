@@ -1,1 +1,1 @@
-mysql -u appuser -pdbuser123 -h localhost -P 5000 myapp
+mysql -u appuser -pdbuser123 -h localhost -P 5001 myapp
